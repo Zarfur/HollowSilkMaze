@@ -1,6 +1,6 @@
 import pygame
-
-from Mazes.MazeProject.HollowSilkMaze.game_object import Game_object
+import random
+from game_object import Game_object
 
 class Cell(Game_object):
 
@@ -14,6 +14,8 @@ class Cell(Game_object):
         #               top, right, bottom, left
         self.walls = [True, True, True, True]
         self.visited = False
+        self.walled = random.random() <= 0.1 and x != 0 and y != 0
+
 
     def draw(self, surface, camera):
         
@@ -27,14 +29,17 @@ class Cell(Game_object):
 
         # draws bg during generation
         if self.visited:
-            pygame.draw.rect(surface, self.color, (x_pix, y_pix, self.size, self.size))
+            if self.walled:
+                pygame.draw.rect(surface, self.wall, (x_pix, y_pix, self.size, self.size))   
+            else:
+                pygame.draw.rect(surface, self.color, (x_pix, y_pix, self.size, self.size))
 
         # wall render
-        if self.walls[0]: # top
+        if self.walls[0]: 
             pygame.draw.line(surface, self.wall, (x_pix, y_pix), (x_pix + self.size, y_pix), 2)
-        if self.walls[1]: # right
+        if self.walls[1]: 
             pygame.draw.line(surface, self.wall, (x_pix + self.size, y_pix), (x_pix + self.size, y_pix + self.size), 2)
-        if self.walls[2]: # bottom
+        if self.walls[2]: 
             pygame.draw.line(surface, self.wall, (x_pix + self.size, y_pix + self.size), (x_pix, y_pix + self.size), 2)
-        if self.walls[3]: # left
+        if self.walls[3]: 
             pygame.draw.line(surface, self.wall, (x_pix, y_pix + self.size), (x_pix, y_pix), 2)
