@@ -9,6 +9,15 @@ class Collectable(Game_object):
         self.value = 1
         if self.type == "flea":
             self.value = 5
+        if self.type == "candy":
+            self.value = 1
+        self.collected = False
+
+    def collect(self, player):
+        #might collect the item multiple times
+        if player.x == self.x and player.y == self.y:
+            player.score += self.value
+            self.collected = True
 
     
 

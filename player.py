@@ -7,6 +7,7 @@ class Player(Game_object):
     def __init__(self, x, y, image, CELL_SIZE, hp):
         super().__init__(x, y, image, CELL_SIZE)
         self.hp = hp
+        self.score = 0
 
 
     def find_nearest_target(self, grid):

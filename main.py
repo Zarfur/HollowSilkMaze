@@ -143,6 +143,13 @@ def main():
         for obj in objects:
             obj.update(grid, time)
         
+        for item in collectables:
+            item.collect(player)
+
+        for item in [item for item in collectables if item.collected]:
+            collectables.remove(item)
+            objects.remove(item)
+            
 
     player = Player(0, 0, player_placeholder, CELL_SIZE, 6)
 
