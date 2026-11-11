@@ -26,9 +26,11 @@ class Game_object:
         draw_pos = pygame.Vector2(draw_x, draw_y)
         screen.blit(self.image, camera.apply(draw_pos))
     
-    def update(self, grid):
-
+    def update(self, grid, time):
         self.position = pygame.Vector2(self.x, self.y)
+        
+        self.hitbox.x = self.position.x
+        self.hitbox.y = self.position.y
 
 
 
@@ -36,16 +38,16 @@ class Game_object:
     def move(self, dx, dy, grid):
         current_cell = grid[self.y][self.x]
         
-        if dx == 1 and not current_cell.walls[1] and not grid[self.x + 2][self.y].walled:    
+        if dx == 1 and not current_cell.walls[1] and not grid[self.y][self.x + 1].walled:    
             #print("right")
             self.x += 1
-        elif dx == -1 and not current_cell.walls[3] and not grid[self.x - 2][self.y].walled:  
+        elif dx == -1 and not current_cell.walls[3] and not grid[self.y][self.x -1].walled:  
             #print("left")
             self.x -= 1
-        elif dy == 1 and not current_cell.walls[2] and not grid[self.x][self.y + 2].walled:   
+        elif dy == 1 and not current_cell.walls[2] and not grid[self.y + 1][self.x].walled:   
             #print("bottom")
             self.y += 1
-        elif dy == -1 and not current_cell.walls[0] and not grid[self.x][self.y - 2].walled:  
+        elif dy == -1 and not current_cell.walls[0] and not grid[self.y - 1][self.x].walled:  
             #print("up")
             self.y -= 1
 

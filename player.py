@@ -11,12 +11,12 @@ class Player(Game_object):
 
     def find_nearest_target(self, grid):
         pass
-    
+
     def m1(self):
         pass
 
-    def update(self, grid):
-        super.update(grid)
+    def update(self, grid, time):
+        super().update(grid, time)
         self.find_nearest_target(grid)
 
     def get_inputs(self, key, grid):

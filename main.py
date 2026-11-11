@@ -3,6 +3,7 @@ import pygame
 from player import Player
 from cell import Cell
 from camera import Camera
+from sinner import Sinner
 
 GAME_WIDTH = 2400
 GAME_HEIGHT = 2400
@@ -75,7 +76,7 @@ def reset_generation_state():
 
 
 
-def generate_item(current):
+def generate_item(current, enemies, collectables, grid):
     x = current.x
     y = current.y
     if random.random() < prob_candy:
@@ -85,13 +86,15 @@ def generate_item(current):
         pass
     
     elif random.random() < prob_sin:
-        pass
+        enemies.append(Sinner(x, y, player_placeholder, CELL_SIZE, 25, None, grid))
 
     elif random.random() < prob_wall:
         pass
 
 def generate_maze():
     grid, stack, current, generating = reset_generation_state()
+    enemies = []
+    collectables = []
 
     while generating:
         neighbors = get_neighbors(current, grid)
@@ -99,7 +102,7 @@ def generate_maze():
         if neighbors:
             next_cell = random.choice(neighbors)
             stack.append(current)
-            generate_item(current)
+            generate_item(current, enemies, collectables, grid)
             remove_walls(current, next_cell)
             current = next_cell
             current.visited = True
@@ -110,16 +113,16 @@ def generate_maze():
         else:
             generating = False
 
-    return grid
+    return grid, enemies, collectables
 
 
 def main():
     running = True
 
     camera = Camera(0, 0, WIDTH, HEIGHT, GAME_WIDTH, GAME_HEIGHT, CELL_SIZE)
-    grid = generate_maze()
+    grid, enemies, collectables = generate_maze()
 
-        
+
     def draw(grid, objects, camera):
         screen.fill((0, 0, 0))
 
@@ -134,18 +137,24 @@ def main():
 
         pygame.display.flip()
 
-    def update(objects, camera, player):
+    def update(objects, camera, player, time):
         camera.update(player)
 
         for obj in objects:
-            obj.update(grid)
+            obj.update(grid, time)
         
 
     player = Player(0, 0, player_placeholder, CELL_SIZE, 6)
 
-    objs = [player]
+    objs = [player] + enemies + collectables
+
     
+
+    for enemy in enemies:
+        enemy.set_target(player)
+
     while running:
+        current_time = pygame.time.get_ticks()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -155,7 +164,7 @@ def main():
                 player.get_inputs(event.key, grid)
         
         draw(grid, objs, camera)
-        update(objs, camera, player)
+        update(objs, camera, player, current_time)
 
 
         clock.tick(FPS)

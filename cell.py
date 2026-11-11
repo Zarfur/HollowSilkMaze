@@ -14,7 +14,10 @@ class Cell(Game_object):
         #               top, right, bottom, left
         self.walls = [True, True, True, True]
         self.visited = False
-        self.walled = random.random() <= 0.1 and x != 0 and y != 0
+
+        # fix soon
+        #self.walled = random.random() <= 0.1 and x != 0 and y != 0
+        self.walled = False
 
 
     def draw(self, surface, camera):
