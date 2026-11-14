@@ -4,9 +4,6 @@ class Game_object:
 
     def __init__(self, x, y, image, CELL_SIZE):
         self.image = image
-        self.image_right = image
-        self.image_left = pygame.transform.flip(image, True, False)
-        self.facing_right = True 
 
         self.x = x
         self.y = y
@@ -29,8 +26,10 @@ class Game_object:
     def update(self, grid, time):
         self.position = pygame.Vector2(self.x, self.y)
         
-        self.hitbox.x = self.position.x
-        self.hitbox.y = self.position.y
+        center_x = (self.x * self.CELL_SIZE) + (self.CELL_SIZE // 2)
+        center_y = (self.y * self.CELL_SIZE) + (self.CELL_SIZE // 2)
+
+        self.hitbox.center = (center_x, center_y)
 
 
 
@@ -51,8 +50,6 @@ class Game_object:
             #print("up")
             self.y -= 1
 
-    def take_damage(self, m1_hitbox):
-        pass
-
-    def collide_other(self, other):
-        pass
+    def collide(self, other):
+        if isinstance(other, Game_object):
+            return self.hitbox.colliderect(other.hitbox)

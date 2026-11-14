@@ -2,41 +2,50 @@ import heapq
 
 from game_object import Game_object
 import random
+import pygame
 
 class Sinner(Game_object):
     def __init__(self, x, y, image, CELL_SIZE, hp, target, grid):
         super().__init__(x, y, image, CELL_SIZE)
         self.hp = hp
-        self.state = "pursuit"
+        self.state = "patrol"
         self.movement_rate = 5
         self.global_target = target
-        self.current_target = None
 
         self.grid = grid
-        self.current = self.grid[self.x][self.y]
+        self.current = self.grid[self.y][self.x]
         self.move_cooldown = 150
-        self.RANGE = 8
+        self.RANGE = 5
         self.visible_tiles = []
+        self.last_move = 0
+        self.last_search = 0
+        self.search_cd = 3000
 
-    def patrol(self, grid):
-        self.current = grid[self.y][self.x]
+    def patrol(self):
+        self.current = self.grid[self.y][self.x]
 
-        options = self.possible_options(grid)  
+        options = self.possible_options(self.grid)  
 
         if options:
             dx, dy = random.choice(options)
-            self.move(dx, dy, grid)
-            self.current = grid[self.y][self.x]
-            self.visited.append(self.current)
-            self.path.append(self.current)
+            self.move(dx, dy, self.grid)
+            self.current = self.grid[self.y][self.x]
+
+        if self.manhattan(self.global_target.current, self.current) <= self.RANGE or self.global_target.current in self.visible_tiles:
+            self.state = "pursuit"
 
     def set_target(self, target):
         if self.global_target is None:
             self.global_target = target
 
 
-    def manhattan(a, b):
-        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+    def manhattan(self, a, b):
+        if isinstance(a, tuple): ax, ay = a
+        else: ax, ay = a.x, a.y
+        if isinstance(b, tuple): bx, by = b
+        else: bx, by = b.x, b.y
+
+        return abs(ax - bx) + abs(ay - by)
         
     def astar(self, start, target):
         if start == target:
@@ -45,6 +54,8 @@ class Sinner(Game_object):
         heapq.heappush(frontier, (0, start))
         came_from = {start: None}
         cost_so_far = {start: 0}
+        height = len(self.grid)
+        width = len(self.grid[0])
 
         while frontier:
             _, current = heapq.heappop(frontier)
@@ -55,7 +66,16 @@ class Sinner(Game_object):
                 next_node = (cx + dx, cy + dy)
                 nx, ny = next_node
 
-                if 0 <= nx < 50 and 0 <= ny < 50 and self.grid[ny][nx] == 0:
+                if 0 <= nx < width and 0 <= ny < height:
+                    current_cell = self.grid[cy][cx]
+                    
+                    if dx == -1: blocked = current_cell.walls[3]
+                    elif dx == 1: blocked = current_cell.walls[1]
+                    elif dy == -1: blocked = current_cell.walls[0]
+                    else: blocked = current_cell.walls[2]
+
+                    if blocked: continue
+                
                     new_cost = cost_so_far[current] + 1
                     if next_node not in cost_so_far or new_cost < cost_so_far[next_node]:
                         cost_so_far[next_node] = new_cost
@@ -75,16 +95,21 @@ class Sinner(Game_object):
 
     def pursuit(self):
         
+        start = (self.x, self.y)
+        target = (self.global_target.x, self.global_target.y)
+        astar_path = self.astar(start, target)
+
         if len(astar_path) > 1:
-            curr_pos = list(astar_path[1])
-        
-            astar_path = self.astar(self.grid, tuple(curr_pos), tuple(self.current_target.position))
+            nx, ny = astar_path[1]
+            dx = nx - self.x
+            dy = ny - self.y
+            self.move(dx, dy, self.grid)
+            self.current = self.grid[self.y][self.x]
 
-        position = self.current_target.position
-        target_tile = self.grid[position.y][position.x]
-
-        if not (target_tile in self.visible_tiles or self.manhattan(target_tile, self.current) <= self.RANGE):
+        if self.manhattan(self.global_target.current, self.current) >= self.RANGE and not self.global_target.current in self.visible_tiles:
             self.state = "search"
+            self.last_search = pygame.time.get_ticks()
+
 
     def line_of_sight(self):
         available_directions = self.possible_options(self.grid)
@@ -107,34 +132,55 @@ class Sinner(Game_object):
 
     def possible_options(self, grid):
         options = []
-        if not self.current.walls[0] and grid[self.y - 1][self.x]:
-            options.append((0, -1))
-        if not self.current.walls[1] and grid[self.y][self.x + 1]:
-            options.append((1, 0))
-        if not self.current.walls[2] and grid[self.y + 1][self.x]:
-            options.append((0, 1))
-        if not self.current.walls[3] and grid[self.y][self.x - 1]:
-            options.append((-1, 0))
+
+        height = len(grid)
+        width = len(grid[0])
+        if self.y > 0:
+            if not self.current.walls[0] and grid[self.y - 1][self.x]:
+                options.append((0, -1))
+        if self.x < width - 1:
+            if not self.current.walls[1] and grid[self.y][self.x + 1]:
+                options.append((1, 0))
+        if self.y < height - 1:
+            if not self.current.walls[2] and grid[self.y + 1][self.x]:
+                options.append((0, 1))
+        if self.x > 0:
+            if not self.current.walls[3] and grid[self.y][self.x - 1]:
+                options.append((-1, 0))
         return options
 
-    
+        
     def update(self, grid, current_time):
-        last_move = current_time
         super().update(grid, current_time)
-
-        self.current = self.grid[self.x][self.y]
+        self.current = self.grid[self.y][self.x]
         self.line_of_sight()
 
-        if current_time - last_move > self.move_cooldown * 2: 
+        if current_time - self.last_move > self.move_cooldown * 2: 
+            self.last_move = current_time
+            #print(f"current state: {self.state}")
+            #print(f"target: {self.global_target}")
             if self.state == "pursuit":
                 self.move_cooldown = 150
-                self.pursuit(grid)
+                self.pursuit()
             elif self.state == "search":
+                if current_time - self.last_search >= self.search_cd:
+                    self.last_search = 0
+                    self.state = "patrol"
                 self.move_cooldown = 100
-                self.patrol(grid)
+                self.patrol()
             else:
                 self.move_cooldown = 250
-                self.patrol(grid)
+                self.patrol()
 
+    def take_damage(self, enemies, destructables):
+        #print(f"current hp: {self.hp}")
+        self.hp -= 1
+        if self.hp <= 0:
+            self.global_target.score += 5
+            if self in enemies:
+                enemies.remove(self)
+                destructables.remove(self)
+
+                del self
 
         

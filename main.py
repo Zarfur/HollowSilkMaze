@@ -4,6 +4,7 @@ from player import Player
 from cell import Cell
 from camera import Camera
 from sinner import Sinner
+from collectable import Collectable
 
 GAME_WIDTH = 2400
 GAME_HEIGHT = 2400
@@ -21,14 +22,20 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Hollow Silk Maze")
 clock = pygame.time.Clock()
 
-player_placeholder = pygame.image.load("Mazes\MazeProject\HollowSilkMaze\player_image_placeholder.png").convert_alpha()
-player_placeholder = pygame.transform.scale(player_placeholder, (25, 30)) 
+SCALE_X = CELL_SIZE - 10
+SCALE_Y = CELL_SIZE - 5
+# i should really make an image cache but im too lazy 
+player_placeholder = pygame.transform.scale(pygame.image.load("player_image_placeholder.png").convert_alpha(), (SCALE_X, SCALE_Y ))
+candy_image = pygame.transform.scale(pygame.image.load("candy_image.png").convert_alpha(), (SCALE_X, SCALE_Y ))
+flea_image = pygame.transform.scale(pygame.image.load("flea_image.png").convert_alpha(), (SCALE_X, SCALE_Y ))
+gms_image = pygame.transform.scale(pygame.image.load("gms_image.png").convert_alpha(), (SCALE_X, SCALE_Y ))
+sinner_image = pygame.transform.scale(pygame.image.load("sinner_image.png").convert_alpha(), (SCALE_X, SCALE_Y))
 
 
-prob_candy = .1
-prob_flea = .03
-prob_sin = .03
-prob_wall = .1
+
+prob_candy = .04
+prob_flea = .006
+prob_sin = .006
 
 
 def get_neighbors(cell, grid):
@@ -67,32 +74,34 @@ def remove_walls(current, next_cell):
 
 def reset_generation_state():
     # set up maze for generation
-    grid = [[Cell(x, y, CELL_SIZE, CELL_COLOR, WALL_COLOR) for x in range(GRID_SIZE)] for y in range(GRID_SIZE)]
+    destructables = []
+    grid = [[Cell(x, y, CELL_SIZE, CELL_COLOR, WALL_COLOR, destructables) for x in range(GRID_SIZE)] for y in range(GRID_SIZE)]
     stack = []
     current = grid[0][0]
     current.visited = True
     generating = True
-    return grid, stack, current, generating
+    return grid, stack, current, generating, destructables
 
 
 
-def generate_item(current, enemies, collectables, grid):
+def generate_item(current, enemies, collectables, grid, destructables):
     x = current.x
     y = current.y
     if random.random() < prob_candy:
-        pass
+        collectables.append(Collectable(x, y, candy_image, CELL_SIZE, "candy", None, collectables))
 
     elif random.random() < prob_flea:
-        pass
+        collectables.append(Collectable(x, y, flea_image, CELL_SIZE, "flea", None, collectables))
     
     elif random.random() < prob_sin:
-        enemies.append(Sinner(x, y, player_placeholder, CELL_SIZE, 25, None, grid))
+        sinner = Sinner(x, y, sinner_image, CELL_SIZE, 5, None, grid)
+        enemies.append(sinner)
+        destructables.append(sinner)
 
-    elif random.random() < prob_wall:
-        pass
+
 
 def generate_maze():
-    grid, stack, current, generating = reset_generation_state()
+    grid, stack, current, generating, destructables = reset_generation_state()
     enemies = []
     collectables = []
 
@@ -102,7 +111,7 @@ def generate_maze():
         if neighbors:
             next_cell = random.choice(neighbors)
             stack.append(current)
-            generate_item(current, enemies, collectables, grid)
+            generate_item(current, enemies, collectables, grid, destructables)
             remove_walls(current, next_cell)
             current = next_cell
             current.visited = True
@@ -113,14 +122,15 @@ def generate_maze():
         else:
             generating = False
 
-    return grid, enemies, collectables
+    return grid, enemies, collectables, destructables
 
 
 def main():
     running = True
 
     camera = Camera(0, 0, WIDTH, HEIGHT, GAME_WIDTH, GAME_HEIGHT, CELL_SIZE)
-    grid, enemies, collectables = generate_maze()
+    grid, enemies, collectables, destructables = generate_maze()
+
 
 
     def draw(grid, objects, camera):
@@ -133,6 +143,8 @@ def main():
 
         for obj in objects:
             obj.draw(screen, camera)
+            if isinstance(obj, Player):
+                player.draw_m1(screen, camera)
 
 
         pygame.display.flip()
@@ -151,9 +163,9 @@ def main():
             objects.remove(item)
             
 
-    player = Player(0, 0, player_placeholder, CELL_SIZE, 6)
+    player = Player(0, 0, player_placeholder, CELL_SIZE, 6, enemies, destructables)
 
-    objs = [player] + enemies + collectables
+    objs = [player]
 
     
 
@@ -170,8 +182,8 @@ def main():
             elif event.type == pygame.KEYDOWN:
                 player.get_inputs(event.key, grid)
         
-        draw(grid, objs, camera)
-        update(objs, camera, player, current_time)
+        draw(grid, objs + collectables + enemies, camera)
+        update(objs + collectables + enemies, camera, player, current_time)
 
 
         clock.tick(FPS)

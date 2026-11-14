@@ -4,20 +4,21 @@ from game_object import Game_object
 
 class Cell(Game_object):
 
-    def __init__(self, x, y, size, color, wall):
+    def __init__(self, x, y, size, color, wall, destructables):
         self.x = x
         self.y = y
         self.size = size
         self.color = color
         self.wall = wall
+        self.hitbox = pygame.Rect(x * size, y * size, size, size)
 
         #               top, right, bottom, left
         self.walls = [True, True, True, True]
         self.visited = False
 
-        # fix soon
-        #self.walled = random.random() <= 0.1 and x != 0 and y != 0
-        self.walled = False
+        self.walled = random.random() <= 0.02 and x != 0 and y != 0
+        if self.walled:
+            destructables.append(self)
 
 
     def draw(self, surface, camera):
