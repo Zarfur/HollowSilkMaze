@@ -16,7 +16,7 @@ class Cell(Game_object):
         self.walls = [True, True, True, True]
         self.visited = False
 
-        self.walled = random.random() <= 0.02 and x != 0 and y != 0
+        self.walled = random.random() <= 0.08 and x != 0 and y != 0
         if self.walled:
             destructables.append(self)
 

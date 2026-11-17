@@ -15,13 +15,15 @@ class Sinner(Game_object):
         self.grid = grid
         self.current = self.grid[self.y][self.x]
         self.move_cooldown = 150
-        self.RANGE = 5
+        self.RANGE = 8
         self.visible_tiles = []
         self.last_move = 0
         self.last_search = 0
         self.search_cd = 3000
+        self.current_path = []
 
     def patrol(self):
+        
         self.current = self.grid[self.y][self.x]
 
         options = self.possible_options(self.grid)  
@@ -98,6 +100,7 @@ class Sinner(Game_object):
         start = (self.x, self.y)
         target = (self.global_target.x, self.global_target.y)
         astar_path = self.astar(start, target)
+        self.current_path = astar_path
 
         if len(astar_path) > 1:
             nx, ny = astar_path[1]
@@ -183,4 +186,16 @@ class Sinner(Game_object):
 
                 del self
 
-        
+    def draw_path(self, screen, camera):
+        if not self.current_path: return
+        for x, y in self.current_path:
+            center_x = x * self.CELL_SIZE + self.CELL_SIZE // 2
+            center_y = y * self.CELL_SIZE + self.CELL_SIZE //2
+
+            draw_pos = camera.apply(pygame.Vector2(center_x, center_y))
+            pygame.draw.circle(screen, (255, 0, 0), (draw_pos.x, draw_pos.y), 5)
+
+    def end_game(self):
+        if self.position == self.global_target.position:
+            return True
+        return False

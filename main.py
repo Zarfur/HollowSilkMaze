@@ -5,6 +5,7 @@ from cell import Cell
 from camera import Camera
 from sinner import Sinner
 from collectable import Collectable
+from display import Display
 
 GAME_WIDTH = 2400
 GAME_HEIGHT = 2400
@@ -35,11 +36,10 @@ sinner_image = pygame.transform.scale(pygame.image.load("sinner_image.png").conv
 
 prob_candy = .04
 prob_flea = .006
-prob_sin = .006
+prob_sin = .04
 
 
 def get_neighbors(cell, grid):
-    # get all adjacent cells 
     neighbors = []
     directions = [(0, -1), (1, 0), (0, 1), (-1, 0)] 
     
@@ -53,7 +53,6 @@ def get_neighbors(cell, grid):
 
 
 def remove_walls(current, next_cell):
-    # tears down matching walls in two neighboring cells
     dx = current.x - next_cell.x
     dy = current.y - next_cell.y
 
@@ -73,7 +72,6 @@ def remove_walls(current, next_cell):
 
 
 def reset_generation_state():
-    # set up maze for generation
     destructables = []
     grid = [[Cell(x, y, CELL_SIZE, CELL_COLOR, WALL_COLOR, destructables) for x in range(GRID_SIZE)] for y in range(GRID_SIZE)]
     stack = []
@@ -84,16 +82,16 @@ def reset_generation_state():
 
 
 
-def generate_item(current, enemies, collectables, grid, destructables):
+def generate_item(current, enemies, collectables, grid, destructables, summon, player_pos):
     x = current.x
     y = current.y
-    if random.random() < prob_candy:
+    if not summon and random.random() < prob_candy:
         collectables.append(Collectable(x, y, candy_image, CELL_SIZE, "candy", None, collectables))
 
-    elif random.random() < prob_flea:
+    elif not summon and random.random() < prob_flea:
         collectables.append(Collectable(x, y, flea_image, CELL_SIZE, "flea", None, collectables))
     
-    elif random.random() < prob_sin:
+    elif random.random() < prob_sin and abs(x - player_pos[0]) + abs(y - player_pos[1]) >= 10:
         sinner = Sinner(x, y, sinner_image, CELL_SIZE, 5, None, grid)
         enemies.append(sinner)
         destructables.append(sinner)
@@ -111,7 +109,7 @@ def generate_maze():
         if neighbors:
             next_cell = random.choice(neighbors)
             stack.append(current)
-            generate_item(current, enemies, collectables, grid, destructables)
+            generate_item(current, enemies, collectables, grid, destructables, False, tuple([0, 0]))
             remove_walls(current, next_cell)
             current = next_cell
             current.visited = True
@@ -122,18 +120,35 @@ def generate_maze():
         else:
             generating = False
 
+    open_walls(grid, 256)
     return grid, enemies, collectables, destructables
 
+def open_walls(grid, amount):
+    for i in range(amount):
+        x = random.randrange(len(grid))
+        y = random.randrange(len(grid[0]))
+        current = grid[y][x]
+        options = []
+
+        if y > 0 and current.walls[0]: options.append((0, -1))
+        if x < len(grid) - 1 and current.walls[1]: options.append((1, 0))
+        if y < len(grid[0]) - 1 and current.walls[2]: options.append((0, 1))
+        if x > 0 and current.walls[3]: options.append((-1, 0))
+
+        if options:
+            dx, dy = random.choice(options)
+            next_cell = grid[y + dy][x + dx]
+            remove_walls(current, next_cell)
 
 def main():
     running = True
 
     camera = Camera(0, 0, WIDTH, HEIGHT, GAME_WIDTH, GAME_HEIGHT, CELL_SIZE)
     grid, enemies, collectables, destructables = generate_maze()
+    debug = False
+    death = False
 
-
-
-    def draw(grid, objects, camera):
+    def draw(grid, objects, camera, display):
         screen.fill((0, 0, 0))
 
         # maze 
@@ -146,14 +161,34 @@ def main():
             if isinstance(obj, Player):
                 player.draw_m1(screen, camera)
 
+            if isinstance(obj, Sinner) and debug:
+                if obj.state == "pursuit":
+                    obj.draw_path(screen, camera)
+
+        display.draw(screen)
 
         pygame.display.flip()
 
-    def update(objects, camera, player, time):
+    def update(objects, camera, player, time, display):
+        nonlocal death
         camera.update(player)
+        display.update()
 
         for obj in objects:
             obj.update(grid, time)
+            if isinstance(obj, Sinner):
+                if obj.end_game():
+                    death = True
+        if len(enemies) <= 33:
+            for i in range(random.randint(15, 40)):
+                x = random.randrange(len(grid))
+                y = random.randrange(len(grid[0]))
+                generate_item(grid[x][y], enemies, collectables, grid, destructables, False, tuple([0, 0]))
+                for enemy in enemies:
+                    if enemy.global_target == None:
+                        enemy.set_target(player)
+
+
         
         for item in collectables:
             item.collect(player)
@@ -163,27 +198,30 @@ def main():
             objects.remove(item)
             
 
-    player = Player(0, 0, player_placeholder, CELL_SIZE, 6, enemies, destructables)
+    player = Player(0, 0, player_placeholder, CELL_SIZE, 6, enemies, destructables, 3)
 
     objs = [player]
 
-    
-
     for enemy in enemies:
         enemy.set_target(player)
+
+    display = Display(None, player, WIDTH, HEIGHT)
 
     while running:
         current_time = pygame.time.get_ticks()
 
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or death:
                 running = False
         
             elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_k:
+                    debug = not debug
+                
                 player.get_inputs(event.key, grid)
         
-        draw(grid, objs + collectables + enemies, camera)
-        update(objs + collectables + enemies, camera, player, current_time)
+        draw(grid, objs + collectables + enemies, camera, display)
+        update(objs + collectables + enemies, camera, player, current_time, display)
 
 
         clock.tick(FPS)

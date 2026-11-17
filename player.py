@@ -6,7 +6,7 @@ from cell import Cell
 
 class Player(Game_object):
 
-    def __init__(self, x, y, image, CELL_SIZE, hp, enemies, destructables):
+    def __init__(self, x, y, image, CELL_SIZE, hp, enemies, destructables, m1rng):
         super().__init__(x, y, image, CELL_SIZE)
         self.hp = hp
         self.score = 0
@@ -18,12 +18,13 @@ class Player(Game_object):
         self.m1_effect_duration = 230  
         self.m1_effect_pos = None
         self.m1_effect_radius = 0
+        self.m1_range = m1rng
 
 
     def m1(self, destructables):
         center_x = (self.x * self.CELL_SIZE) + (self.CELL_SIZE // 2)
         center_y = (self.y * self.CELL_SIZE) + (self.CELL_SIZE // 2)
-        m1_box = pygame.Rect(0, 0, self.image.get_width() * 1.9, self.image.get_height() * 1.9)
+        m1_box = pygame.Rect(0, 0, self.image.get_width() * self.m1_range, self.image.get_height() * self.m1_range)
         m1_box.center = (center_x, center_y)
 
         self.m1_effect_pos = m1_box.center
