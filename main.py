@@ -19,6 +19,8 @@ CELL_SIZE = GAME_WIDTH // GRID_SIZE
 CELL_COLOR = (43, 34, 58)
 WALL_COLOR = (247, 240, 232)
 
+HIGH_SCORE = 9999
+
 pygame.init()
 pygame.mixer.init()
 
@@ -35,6 +37,8 @@ flea_image = pygame.transform.scale(pygame.image.load("flea_image.png").convert_
 gms_image = pygame.transform.scale(pygame.image.load("gms_image.png").convert_alpha(), (SCALE_X, SCALE_Y ))
 sinner_image = pygame.transform.scale(pygame.image.load("sinner_image.png").convert_alpha(), (SCALE_X, SCALE_Y))
 
+win_image = pygame.transform.scale(pygame.image.load("win.jpg").convert_alpha(), (WIDTH, HEIGHT))
+lose_image = pygame.transform.scale(pygame.image.load("lose.jpg").convert_alpha(), (WIDTH, HEIGHT))
 
 uwa_song = pygame.mixer.Sound("uwa.mp3")
 morning_dance_song = pygame.mixer.Sound("morning_dance.mp3")
@@ -158,40 +162,49 @@ def main():
     camera = Camera(0, 0, WIDTH, HEIGHT, GAME_WIDTH, GAME_HEIGHT, CELL_SIZE)
     grid, enemies, collectables, destructables = generate_maze()
     debug = False
-    death = False
+    state = "playing"
 
     def draw(grid, objects, camera, display):
         screen.fill((0, 0, 0))
 
-        # maze 
-        for row in grid:
-            for cell in row:
-                cell.draw(screen, camera)
+        if state == "playing":
+            # maze 
+            for row in grid:
+                for cell in row:
+                    cell.draw(screen, camera)
 
-        for obj in objects:
-            obj.draw(screen, camera)
-            if isinstance(obj, Player):
-                player.draw_m1(screen, camera)
+            for obj in objects:
+                obj.draw(screen, camera)
+                if isinstance(obj, Player):
+                    player.draw_m1(screen, camera)
 
-            if isinstance(obj, Sinner) and debug:
-                if obj.state == "pursuit":
-                    obj.draw_path(screen, camera)
-                obj.debug_draw(screen, camera)
+                if isinstance(obj, Sinner) and debug:
+                    if obj.state == "pursuit":
+                        obj.draw_path(screen, camera)
+                    obj.debug_draw(screen, camera)
 
-        display.draw(screen)
+
+            display.draw(screen)
+        else:
+            if state == "win":
+                screen.blit(win_image, (0, 0))
+            elif state == "lost":
+                screen.blit(lose_image, (0, 0))
+
 
         pygame.display.flip()
 
     def update(objects, camera, player, time, display):
-        nonlocal death
+        nonlocal state
         camera.update(player)
         display.update()
-
+        if player.score >= HIGH_SCORE:
+            state = "win"
         for obj in objects:
             obj.update(grid, time)
             if isinstance(obj, Sinner):
                 if obj.end_game():
-                    death = True
+                    state = "lost"
         if len(enemies) <= 33:
             for i in range(random.randint(15, 40)):
                 x = random.randrange(len(grid))
@@ -220,33 +233,40 @@ def main():
 
     display = Display(None, player, WIDTH, HEIGHT)
 
-    bg_channel.play(uwa_song, loops=-1)
+    bg_channel.play(morning_dance_song, loops=-1)
     new_last_player_move = "up"
     last_player_move = "up"
     boss = GMS(len(grid) - 5, len(grid[0]) - 5, gms_image, CELL_SIZE, 999, player, grid)
     enemies.append(boss)
     destructables.append(boss)
+    song = False
 
     while running:
         current_time = pygame.time.get_ticks()
         for event in pygame.event.get():
-            if event.type == pygame.QUIT or death:
+            if event.type == pygame.QUIT:
                 running = False
         
-            elif event.type == pygame.KEYDOWN:
+            elif event.type == pygame.KEYDOWN and state == "playing":
                 if event.key == pygame.K_k:
                     debug = not debug
                 
                 new_last_player_move = player.get_inputs(event.key, grid)
 
-        boss.data_intake(new_last_player_move, last_player_move)
+        #boss.data_intake(new_last_player_move, last_player_move)
         last_player_move = new_last_player_move
-
-
+        
+        if state == "win":
+            if not song:
+                song = True
+                bg_channel.play(uwa_song, loops=-1)
+        elif state == "lost":
+            bg_channel.set_volume(0)
+        elif state == "playing":
+            update(objs + collectables + enemies, camera, player, current_time, display)
         draw(grid, objs + collectables + enemies, camera, display)
-        update(objs + collectables + enemies, camera, player, current_time, display)
 
-
+        
         clock.tick(FPS)
 
 main()
