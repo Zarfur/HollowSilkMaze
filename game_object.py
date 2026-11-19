@@ -1,5 +1,6 @@
 import pygame
 
+# game object base for other game objects to be built on
 class Game_object:
 
     def __init__(self, x, y, image, CELL_SIZE):
@@ -12,7 +13,7 @@ class Game_object:
 
         self.CELL_SIZE = CELL_SIZE
 
-
+    # draws in offset position
     def draw(self, screen, camera):
         center_x = (self.x * self.CELL_SIZE) + (self.CELL_SIZE // 2)
         center_y = (self.y * self.CELL_SIZE) + (self.CELL_SIZE // 2)
@@ -22,7 +23,8 @@ class Game_object:
 
         draw_pos = pygame.Vector2(draw_x, draw_y)
         screen.blit(self.image, camera.apply(draw_pos))
-    
+
+    # update abstract
     def update(self, grid, time):
         self.position = pygame.Vector2(self.x, self.y)
         
@@ -31,9 +33,7 @@ class Game_object:
 
         self.hitbox.center = (center_x, center_y)
 
-
-
-
+    # apply movement
     def move(self, dx, dy, grid):
         current_cell = grid[self.y][self.x]
         
@@ -50,6 +50,7 @@ class Game_object:
             #print("up")
             self.y -= 1
 
+    # check collisions
     def collide(self, other):
         if isinstance(other, Game_object):
             return self.hitbox.colliderect(other.hitbox)

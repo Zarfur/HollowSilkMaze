@@ -29,7 +29,7 @@ class Player(Game_object):
 
 
 
-
+    # m1. spawns hitbox around player and collides with enemies/destructables 
     def m1(self, destructables):
         self.poop_channel.play(self.shaw)
         center_x = (self.x * self.CELL_SIZE) + (self.CELL_SIZE // 2)
@@ -54,7 +54,7 @@ class Player(Game_object):
         del m1_box
                     
 
-
+    # change score and position
     def update(self, grid, time):
         super().update(grid, time)
         self.current = grid[self.y][self.x]
@@ -62,6 +62,7 @@ class Player(Game_object):
             self.channel.play(self.gitgud)
             self.old_score = self.score
 
+    # result of inputs
     def get_inputs(self, key, grid):
         if key == pygame.K_UP:
             self.move(0, -1, grid)
@@ -78,6 +79,7 @@ class Player(Game_object):
         elif key == pygame.K_x:
             self.m1(self.destructables)
 
+    # semi transparent m1 circle 
     def draw_m1(self, screen, camera):
         if self.m1_effect_pos is None:
             return

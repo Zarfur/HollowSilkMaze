@@ -1,5 +1,6 @@
 import pygame
 
+# displays relevant data in bottom of screen
 class Display:
 
     def __init__(self, boss, player, width, height):

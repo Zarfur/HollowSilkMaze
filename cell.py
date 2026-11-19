@@ -2,6 +2,7 @@ import pygame
 import random
 from game_object import Game_object
 
+# cell of a maze
 class Cell(Game_object):
 
     def __init__(self, x, y, size, color, wall, destructables):
@@ -16,6 +17,7 @@ class Cell(Game_object):
         self.walls = [True, True, True, True]
         self.visited = False
 
+        # decides if wall is blocked with silk or not
         self.walled = random.random() <= 0.08 and x != 0 and y != 0
         if self.walled:
             destructables.append(self)
@@ -31,7 +33,6 @@ class Cell(Game_object):
         x_pix = screen_pos.x
         y_pix = screen_pos.y
 
-        # draws bg during generation
         if self.visited:
             if self.walled:
                 pygame.draw.rect(surface, self.wall, (x_pix, y_pix, self.size, self.size))   

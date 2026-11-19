@@ -30,7 +30,7 @@ clock = pygame.time.Clock()
 
 SCALE_X = CELL_SIZE - 10
 SCALE_Y = CELL_SIZE - 5
-# i should really make an image cache but im too lazy 
+# load images and songs
 player_placeholder = pygame.transform.scale(pygame.image.load("player_image_placeholder.png").convert_alpha(), (SCALE_X, SCALE_Y ))
 candy_image = pygame.transform.scale(pygame.image.load("candy_image.png").convert_alpha(), (SCALE_X, SCALE_Y ))
 flea_image = pygame.transform.scale(pygame.image.load("flea_image.png").convert_alpha(), (SCALE_X, SCALE_Y ))
@@ -49,7 +49,7 @@ prob_candy = .04
 prob_flea = .006
 prob_sin = .04
 
-
+# gets the neighbors of a cell
 def get_neighbors(cell, grid):
     neighbors = []
     directions = [(0, -1), (1, 0), (0, 1), (-1, 0)] 
@@ -62,7 +62,7 @@ def get_neighbors(cell, grid):
                 neighbors.append(neighbor)
     return neighbors
 
-
+# removes the walls of the cell and relevant matching ones, too
 def remove_walls(current, next_cell):
     dx = current.x - next_cell.x
     dy = current.y - next_cell.y
@@ -81,7 +81,7 @@ def remove_walls(current, next_cell):
         current.walls[0] = False
         next_cell.walls[2] = False
 
-
+# resets gen state for a new maze to be generated
 def reset_generation_state():
     destructables = []
     grid = [[Cell(x, y, CELL_SIZE, CELL_COLOR, WALL_COLOR, destructables) for x in range(GRID_SIZE)] for y in range(GRID_SIZE)]
@@ -92,7 +92,7 @@ def reset_generation_state():
     return grid, stack, current, generating, destructables
 
 
-
+# builds an item at a chosen cell
 def generate_item(current, enemies, collectables, grid, destructables, summon, player_pos):
     x = current.x
     y = current.y
@@ -108,7 +108,7 @@ def generate_item(current, enemies, collectables, grid, destructables, summon, p
         destructables.append(sinner)
 
 
-
+# builds the maze
 def generate_maze():
     grid, stack, current, generating, destructables = reset_generation_state()
     enemies = []
@@ -134,6 +134,8 @@ def generate_maze():
     open_walls(grid, 256)
     return grid, enemies, collectables, destructables
 
+# runs through the maze and randomly opens up walls to make
+# it feel more open
 def open_walls(grid, amount):
     for i in range(amount):
         x = random.randrange(len(grid))
@@ -151,6 +153,7 @@ def open_walls(grid, amount):
             next_cell = grid[y + dy][x + dx]
             remove_walls(current, next_cell)
 
+# main method
 def main():
 
         
@@ -164,6 +167,7 @@ def main():
     debug = False
     state = "playing"
 
+    # draw stuff
     def draw(grid, objects, camera, display):
         screen.fill((0, 0, 0))
 
@@ -194,6 +198,7 @@ def main():
 
         pygame.display.flip()
 
+    #run everything's update methods
     def update(objects, camera, player, time, display):
         nonlocal state
         camera.update(player)
@@ -241,6 +246,7 @@ def main():
     destructables.append(boss)
     song = False
 
+    # main game loop
     while running:
         current_time = pygame.time.get_ticks()
         for event in pygame.event.get():

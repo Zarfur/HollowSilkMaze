@@ -1,6 +1,7 @@
 from game_object import Game_object
 
 
+# collectable for score
 class Collectable(Game_object):
 
     def __init__(self, x, y, image, CELL_SIZE, type, player, collectables):

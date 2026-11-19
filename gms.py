@@ -16,7 +16,7 @@ class GMS(Sinner):
         self.avg_accuracy = [1,1]
         self.recency_bias = 0.8
         
-        
+    # ehhhh find a comment to describe this...
     def predict(self, last_player_move):
         transitions = {"up": 0, "down": 1, "left": 2, "right": 3}
         move_dict = {0: (0, -1), 1: (0, 1), 2: (-1, 0), 3: (1, 0)}
@@ -44,7 +44,7 @@ class GMS(Sinner):
                 next_move = random.choices([i for i in range(4)], weights=[f[0] for f in filtered])[0]
                 target_pos = filtered[next_move][1]
 
-
+    # this one too!
     def data_intake(self, last_plr_move, current_plr_move):
         transitions = {"up": 0, "down": 1, "left": 2, "right": 3}
         self.avg_accuracy[0] *= self.recency_bias

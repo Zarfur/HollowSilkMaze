@@ -24,7 +24,7 @@ class Sinner(Game_object):
 
         self.font = pygame.font.Font(None, 24)
 
-
+    # patrol/search state-- randomly goes to valid options
     def patrol(self):
         
         self.current = self.grid[self.y][self.x]
@@ -39,11 +39,12 @@ class Sinner(Game_object):
         if self.manhattan(self.global_target.current, self.current) <= self.RANGE or self.global_target.current in self.visible_tiles:
             self.state = "pursuit"
 
+    # sets target
     def set_target(self, target):
         if self.global_target is None:
             self.global_target = target
 
-
+    # heuristic distance
     def manhattan(self, a, b):
         if isinstance(a, tuple): ax, ay = a
         else: ax, ay = a.x, a.y
@@ -51,7 +52,8 @@ class Sinner(Game_object):
         else: bx, by = b.x, b.y
 
         return abs(ax - bx) + abs(ay - by)
-        
+
+    # astar algorithm
     def astar(self, start, target):
         if start == target:
             return [start]
@@ -98,6 +100,7 @@ class Sinner(Game_object):
         path.reverse()
         return path
 
+    # pursuit method--while parameters, chases player
     def pursuit(self):
         
         start = (self.x, self.y)
@@ -116,7 +119,7 @@ class Sinner(Game_object):
             self.state = "search"
             self.last_search = pygame.time.get_ticks()
 
-
+    # checks line of sight to player--easier tracking with less walls
     def line_of_sight(self):
         available_directions = self.possible_options(self.grid)
         self.visible_tiles = [self.current]
@@ -135,7 +138,7 @@ class Sinner(Game_object):
                 elif dx == 0 and dy == 1 and next_cell.walls[2]: break
                 elif dx == -1 and dy == 0 and next_cell.walls[3]: break
 
-
+    # check possible movement options
     def possible_options(self, grid):
         options = []
 
@@ -155,7 +158,7 @@ class Sinner(Game_object):
                 options.append((-1, 0))
         return options
 
-        
+        # updates line of sight and state
     def update(self, grid, current_time):
         super().update(grid, current_time)
         self.current = self.grid[self.y][self.x]
@@ -178,6 +181,7 @@ class Sinner(Game_object):
                 self.move_cooldown = 250
                 self.patrol()
 
+    # take damage or die
     def take_damage(self, enemies, destructables):
         #print(f"current hp: {self.hp}")
         self.hp -= 1
@@ -189,6 +193,7 @@ class Sinner(Game_object):
 
                 del self
 
+    # draws path for debug mode
     def draw_path(self, screen, camera):
         if not self.current_path: return
         for x, y in self.current_path:
@@ -199,7 +204,7 @@ class Sinner(Game_object):
             pygame.draw.circle(screen, (255, 0, 0), (draw_pos.x, draw_pos.y), 5)
         
 
-
+    # draws state for debug mode
     def debug_draw(self, screen, camera):
         center_x = (self.x * self.CELL_SIZE) + (self.CELL_SIZE // 2) - (self.image.get_width() // 2)
         center_y = (self.y * self.CELL_SIZE) + (self.CELL_SIZE // 2) - (self.image.get_height() // 2) - 10
@@ -207,6 +212,7 @@ class Sinner(Game_object):
         text = self.font.render(str(self.state), True, (255, 255, 255))
         screen.blit(text, camera.apply(pos))
 
+    # returns if player is killed or not
     def end_game(self):
         if self.position == self.global_target.position:
             return True

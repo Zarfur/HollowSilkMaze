@@ -1,5 +1,6 @@
 import pygame
 
+# applies offset to make viewing window
 class Camera:
 
     def __init__(self, x, y, width, height, game_width, game_height, cell_size):
