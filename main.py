@@ -241,7 +241,10 @@ def main():
     bg_channel.play(morning_dance_song, loops=-1)
     new_last_player_move = "up"
     last_player_move = "up"
-    boss = GMS(len(grid) - 5, len(grid[0]) - 5, gms_image, CELL_SIZE, 999, player, grid)
+    boss = GMS(10, 10, gms_image, CELL_SIZE, 999, player, grid)
+    boss.state = "pursuit"
+
+    # boss = GMS(len(grid) - 5, len(grid[0]) - 5, gms_image, CELL_SIZE, 999, player, grid)
     enemies.append(boss)
     destructables.append(boss)
     song = False
@@ -257,10 +260,13 @@ def main():
                 if event.key == pygame.K_k:
                     debug = not debug
                 
-                new_last_player_move = player.get_inputs(event.key, grid)
+                move = player.get_inputs(event.key, grid)
+                if move in ("up", "down", "left", "right"):
+                    boss.data_intake(last_player_move, move)
+                    last_player_move = move
+                    boss.last_player_move = move
 
         #boss.data_intake(new_last_player_move, last_player_move)
-        last_player_move = new_last_player_move
         
         if state == "win":
             if not song:
