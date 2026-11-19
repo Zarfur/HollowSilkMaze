@@ -7,8 +7,10 @@ from cell import Cell
 class Player(Game_object):
 
     def __init__(self, x, y, image, CELL_SIZE, hp, enemies, destructables, m1rng):
+        pygame.mixer.init()
         super().__init__(x, y, image, CELL_SIZE)
         self.hp = hp
+        self.old_score = 0
         self.score = 0
         self.current = None
         self.enemies = enemies
@@ -20,8 +22,16 @@ class Player(Game_object):
         self.m1_effect_radius = 0
         self.m1_range = m1rng
 
+        self.shaw = pygame.mixer.Sound("shaw.mp3")
+        self.gitgud = pygame.mixer.Sound("gitgud.mp3")
+        self.channel = pygame.mixer.Channel(1)
+        self.poop_channel = pygame.mixer.Channel(2)
+
+
+
 
     def m1(self, destructables):
+        self.poop_channel.play(self.shaw)
         center_x = (self.x * self.CELL_SIZE) + (self.CELL_SIZE // 2)
         center_y = (self.y * self.CELL_SIZE) + (self.CELL_SIZE // 2)
         m1_box = pygame.Rect(0, 0, self.image.get_width() * self.m1_range, self.image.get_height() * self.m1_range)
@@ -48,16 +58,23 @@ class Player(Game_object):
     def update(self, grid, time):
         super().update(grid, time)
         self.current = grid[self.y][self.x]
+        if self.score != self.old_score:
+            self.channel.play(self.gitgud)
+            self.old_score = self.score
 
     def get_inputs(self, key, grid):
         if key == pygame.K_UP:
             self.move(0, -1, grid)
+            return "up"
         elif key == pygame.K_DOWN:
             self.move(0, 1, grid)
+            return "down"
         elif key == pygame.K_LEFT:
             self.move(-1, 0, grid)
+            return "left"
         elif key == pygame.K_RIGHT:
             self.move(1, 0, grid)
+            return "right"
         elif key == pygame.K_x:
             self.m1(self.destructables)
 

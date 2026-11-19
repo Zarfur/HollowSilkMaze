@@ -8,9 +8,9 @@ class Collectable(Game_object):
         self.type = type
         self.value = 1
         if self.type == "flea":
-            self.value = 5
+            self.value = 20
         if self.type == "candy":
-            self.value = 1
+            self.value = 5
         self.collected = False
         self.player = player
         self.collectables = collectables

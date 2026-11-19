@@ -22,6 +22,9 @@ class Sinner(Game_object):
         self.search_cd = 3000
         self.current_path = []
 
+        self.font = pygame.font.Font(None, 24)
+
+
     def patrol(self):
         
         self.current = self.grid[self.y][self.x]
@@ -179,7 +182,7 @@ class Sinner(Game_object):
         #print(f"current hp: {self.hp}")
         self.hp -= 1
         if self.hp <= 0:
-            self.global_target.score += 5
+            self.global_target.score += 3
             if self in enemies:
                 enemies.remove(self)
                 destructables.remove(self)
@@ -194,6 +197,15 @@ class Sinner(Game_object):
 
             draw_pos = camera.apply(pygame.Vector2(center_x, center_y))
             pygame.draw.circle(screen, (255, 0, 0), (draw_pos.x, draw_pos.y), 5)
+        
+
+
+    def debug_draw(self, screen, camera):
+        center_x = (self.x * self.CELL_SIZE) + (self.CELL_SIZE // 2) - (self.image.get_width() // 2)
+        center_y = (self.y * self.CELL_SIZE) + (self.CELL_SIZE // 2) - (self.image.get_height() // 2) - 10
+        pos = pygame.Vector2(center_x, center_y)
+        text = self.font.render(str(self.state), True, (255, 255, 255))
+        screen.blit(text, camera.apply(pos))
 
     def end_game(self):
         if self.position == self.global_target.position:

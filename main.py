@@ -6,6 +6,7 @@ from camera import Camera
 from sinner import Sinner
 from collectable import Collectable
 from display import Display
+from gms import GMS
 
 GAME_WIDTH = 2400
 GAME_HEIGHT = 2400
@@ -19,6 +20,8 @@ CELL_COLOR = (43, 34, 58)
 WALL_COLOR = (247, 240, 232)
 
 pygame.init()
+pygame.mixer.init()
+
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Hollow Silk Maze")
 clock = pygame.time.Clock()
@@ -31,6 +34,10 @@ candy_image = pygame.transform.scale(pygame.image.load("candy_image.png").conver
 flea_image = pygame.transform.scale(pygame.image.load("flea_image.png").convert_alpha(), (SCALE_X, SCALE_Y ))
 gms_image = pygame.transform.scale(pygame.image.load("gms_image.png").convert_alpha(), (SCALE_X, SCALE_Y ))
 sinner_image = pygame.transform.scale(pygame.image.load("sinner_image.png").convert_alpha(), (SCALE_X, SCALE_Y))
+
+
+uwa_song = pygame.mixer.Sound("uwa.mp3")
+morning_dance_song = pygame.mixer.Sound("morning_dance.mp3")
 
 
 
@@ -92,7 +99,7 @@ def generate_item(current, enemies, collectables, grid, destructables, summon, p
         collectables.append(Collectable(x, y, flea_image, CELL_SIZE, "flea", None, collectables))
     
     elif random.random() < prob_sin and abs(x - player_pos[0]) + abs(y - player_pos[1]) >= 10:
-        sinner = Sinner(x, y, sinner_image, CELL_SIZE, 5, None, grid)
+        sinner = Sinner(x, y, sinner_image, CELL_SIZE, 3, None, grid)
         enemies.append(sinner)
         destructables.append(sinner)
 
@@ -141,6 +148,11 @@ def open_walls(grid, amount):
             remove_walls(current, next_cell)
 
 def main():
+
+        
+    bg_channel = pygame.mixer.Channel(0)
+    bg_channel.set_volume(0.3)
+
     running = True
 
     camera = Camera(0, 0, WIDTH, HEIGHT, GAME_WIDTH, GAME_HEIGHT, CELL_SIZE)
@@ -164,6 +176,7 @@ def main():
             if isinstance(obj, Sinner) and debug:
                 if obj.state == "pursuit":
                     obj.draw_path(screen, camera)
+                obj.debug_draw(screen, camera)
 
         display.draw(screen)
 
@@ -207,9 +220,15 @@ def main():
 
     display = Display(None, player, WIDTH, HEIGHT)
 
+    bg_channel.play(uwa_song, loops=-1)
+    new_last_player_move = "up"
+    last_player_move = "up"
+    boss = GMS(len(grid) - 5, len(grid[0]) - 5, gms_image, CELL_SIZE, 999, player, grid)
+    enemies.append(boss)
+    destructables.append(boss)
+
     while running:
         current_time = pygame.time.get_ticks()
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT or death:
                 running = False
@@ -218,8 +237,12 @@ def main():
                 if event.key == pygame.K_k:
                     debug = not debug
                 
-                player.get_inputs(event.key, grid)
-        
+                new_last_player_move = player.get_inputs(event.key, grid)
+
+        boss.data_intake(new_last_player_move, last_player_move)
+        last_player_move = new_last_player_move
+
+
         draw(grid, objs + collectables + enemies, camera, display)
         update(objs + collectables + enemies, camera, player, current_time, display)
 

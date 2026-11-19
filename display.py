@@ -22,4 +22,4 @@ class Display:
 
 
     def update(self):
-        self.data[0] = f"Player score: {self.player.score}"
+        self.data[0] = f"Player Candies: {self.player.score}"
