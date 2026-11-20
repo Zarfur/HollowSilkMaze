@@ -71,11 +71,13 @@ class GMS(Sinner):
         return (px, py)
 
     # this one too!
+    # when player moves on tick, model for movement is updated ( likelihood of next movement based on the last) 
+    # +10 to the value of the movement made on the matrix
     def data_intake(self, last_plr_move, current_plr_move):
         if last_plr_move not in MOVES or current_plr_move not in MOVES:
                 return
         last_i, cur_i = MOVES[last_plr_move], MOVES[current_plr_move]
-        row = self.transition_matrix[last_i]
+        row = self.transition_matrix[last_i] 
 
         guess = row.index(max(row))
         self.avg_accuracy[0] *= self.recency_bias
@@ -87,6 +89,10 @@ class GMS(Sinner):
         for i in range(4):
             row[i] *= self.recency_bias
         row[cur_i] += 10
+
+
+# uses a* to move towards the player or goes straight to if unreachable
+# if player out of range then random searching movement
 
     def pursuit(self):
         self.predicted = self.predict(self.last_player_move)
