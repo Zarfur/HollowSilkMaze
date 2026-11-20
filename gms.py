@@ -29,11 +29,15 @@ class GMS(Sinner):
         self.path = []
         self.avg_accuracy = [1,1] # correct guesses out of total guesses 
         self.recency_bias = 0.8 # when gms forgets previous movement 
-
         self.predicted = None
-        self.last_player_move = None 
+        self.last_player_move = None
+
+        self.pursuit_speed = 250
+        self.movement_rate = 50
+        self.RANGE = 66
+        self.debug_color = (255, 255, 255)
+        self.boss = True
         
-    # ehhhh find a comment to describe this...
     def predict(self, last_player_move):
         # no move seen yet so just direct chase player
         if last_player_move not in MOVES:
@@ -51,8 +55,6 @@ class GMS(Sinner):
             lookahead = 10
 
             # "lookahead" gms devides how many moves to predict baased on the distance between player and gms
-            # farther distance = more lookahead distance ex greater than 20 = move to predicted 10 moves ahead 
-
         move = MOVES[last_player_move] # which row in matrx
         for _ in range(lookahead):
             row = self.transition_matrix[move] #odds 
@@ -70,7 +72,6 @@ class GMS(Sinner):
             py += DIRECTIONS[move][1]
         return (px, py)
 
-    # this one too!
     def data_intake(self, last_plr_move, current_plr_move):
         if last_plr_move not in MOVES or current_plr_move not in MOVES:
                 return
@@ -104,3 +105,19 @@ class GMS(Sinner):
                 and self.global_target.current not in self.visible_tiles):
             self.state = "search"
             self.last_search = pygame.time.get_ticks()
+
+    def debug_draw(self, screen, camera):
+        super().debug_draw(screen, camera)
+        if self.predicted is not None:
+            px, py = self.predicted
+
+            tile = pygame.Rect(px * self.CELL_SIZE, py * self.CELL_SIZE, self.CELL_SIZE, self.CELL_SIZE)
+
+            tile_shift = camera.apply(pygame.Vector2(tile.x, tile.y))
+
+            highlighted = pygame.Rect(tile_shift.x, tile_shift.y, self.CELL_SIZE, self.CELL_SIZE)
+            highlight_surface = pygame.Surface((self.CELL_SIZE, self.CELL_SIZE), pygame.SRCALPHA)
+
+        highlight_surface.fill((180, 0, 255, 90))
+
+        screen.blit(highlight_surface, highlighted.topleft)

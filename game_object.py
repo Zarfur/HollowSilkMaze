@@ -10,6 +10,7 @@ class Game_object:
         self.y = y
         self.position = pygame.Vector2(x, y)
         self.hitbox = pygame.Rect(x, y, self.image.get_width(), self.image.get_height())
+        self.boss = False
 
         self.CELL_SIZE = CELL_SIZE
 
@@ -37,18 +38,17 @@ class Game_object:
     def move(self, dx, dy, grid):
         current_cell = grid[self.y][self.x]
         
-        if dx == 1 and not current_cell.walls[1] and not grid[self.y][self.x + 1].walled:    
-            #print("right")
-            self.x += 1
-        elif dx == -1 and not current_cell.walls[3] and not grid[self.y][self.x -1].walled:  
-            #print("left")
-            self.x -= 1
-        elif dy == 1 and not current_cell.walls[2] and not grid[self.y + 1][self.x].walled:   
-            #print("bottom")
-            self.y += 1
-        elif dy == -1 and not current_cell.walls[0] and not grid[self.y - 1][self.x].walled:  
-            #print("up")
-            self.y -= 1
+        if dx == 1 and not current_cell.walls[1]:
+            if self.boss or not grid[self.y][self.x + 1].walled: self.x += 1
+
+        elif dx == -1 and not current_cell.walls[3]:
+            if self.boss or not grid[self.y][self.x - 1].walled: self.x -= 1
+
+        elif dy == 1 and not current_cell.walls[2]:
+            if self.boss or not grid[self.y + 1][self.x].walled: self.y += 1
+
+        elif dy == -1 and not current_cell.walls[0]:
+            if self.boss or not grid[self.y - 1][self.x].walled: self.y -= 1
 
     # check collisions
     def collide(self, other):

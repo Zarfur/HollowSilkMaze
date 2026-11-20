@@ -19,7 +19,7 @@ CELL_SIZE = GAME_WIDTH // GRID_SIZE
 CELL_COLOR = (43, 34, 58)
 WALL_COLOR = (247, 240, 232)
 
-HIGH_SCORE = 9999
+HIGH_SCORE = 999
 
 pygame.init()
 pygame.mixer.init()
@@ -30,11 +30,12 @@ clock = pygame.time.Clock()
 
 SCALE_X = CELL_SIZE - 10
 SCALE_Y = CELL_SIZE - 5
+
 # load images and songs
 player_placeholder = pygame.transform.scale(pygame.image.load("player_image_placeholder.png").convert_alpha(), (SCALE_X, SCALE_Y ))
 candy_image = pygame.transform.scale(pygame.image.load("candy_image.png").convert_alpha(), (SCALE_X, SCALE_Y ))
 flea_image = pygame.transform.scale(pygame.image.load("flea_image.png").convert_alpha(), (SCALE_X, SCALE_Y ))
-gms_image = pygame.transform.scale(pygame.image.load("gms_image.png").convert_alpha(), (SCALE_X, SCALE_Y ))
+gms_image = pygame.transform.scale(pygame.image.load("gms_image.png").convert_alpha(), (CELL_SIZE * 4, CELL_SIZE * 3.5))
 sinner_image = pygame.transform.scale(pygame.image.load("sinner_image.png").convert_alpha(), (SCALE_X, SCALE_Y))
 
 win_image = pygame.transform.scale(pygame.image.load("win.jpg").convert_alpha(), (WIDTH, HEIGHT))
@@ -236,19 +237,17 @@ def main():
     for enemy in enemies:
         enemy.set_target(player)
 
-    display = Display(None, player, WIDTH, HEIGHT)
-
     bg_channel.play(morning_dance_song, loops=-1)
     new_last_player_move = "up"
     last_player_move = "up"
-    boss = GMS(10, 10, gms_image, CELL_SIZE, 999, player, grid)
+    boss = GMS(len(grid) - 3, len(grid[0]) - 3, gms_image, CELL_SIZE, 999, player, grid)
     boss.state = "pursuit"
 
-    # boss = GMS(len(grid) - 5, len(grid[0]) - 5, gms_image, CELL_SIZE, 999, player, grid)
     enemies.append(boss)
     destructables.append(boss)
     song = False
 
+    display = Display(boss, player, WIDTH, HEIGHT)
     # main game loop
     while running:
         current_time = pygame.time.get_ticks()
@@ -266,7 +265,7 @@ def main():
                     last_player_move = move
                     boss.last_player_move = move
 
-        #boss.data_intake(new_last_player_move, last_player_move)
+        boss.data_intake(new_last_player_move, last_player_move)
         
         if state == "win":
             if not song:
