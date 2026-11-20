@@ -7,6 +7,7 @@ from sinner import Sinner
 from collectable import Collectable
 from display import Display
 from gms import GMS
+import asyncio
 
 GAME_WIDTH = 2400
 GAME_HEIGHT = 2400
@@ -41,8 +42,8 @@ sinner_image = pygame.transform.scale(pygame.image.load("sinner_image.png").conv
 win_image = pygame.transform.scale(pygame.image.load("win.jpg").convert_alpha(), (WIDTH, HEIGHT))
 lose_image = pygame.transform.scale(pygame.image.load("lose.jpg").convert_alpha(), (WIDTH, HEIGHT))
 
-uwa_song = pygame.mixer.Sound("uwa.mp3")
-morning_dance_song = pygame.mixer.Sound("morning_dance.mp3")
+uwa_song = pygame.mixer.Sound("uwa.ogg")
+morning_dance_song = pygame.mixer.Sound("morning_dance.ogg")
 
 
 
@@ -155,7 +156,7 @@ def open_walls(grid, amount):
             remove_walls(current, next_cell)
 
 # main method
-def main():
+async def main():
 
         
     bg_channel = pygame.mixer.Channel(0)
@@ -279,5 +280,6 @@ def main():
 
         
         clock.tick(FPS)
+        await asyncio.sleep(0)
 
-main()
+asyncio.run(main())
