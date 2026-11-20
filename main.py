@@ -241,7 +241,7 @@ async def main():
     bg_channel.play(morning_dance_song, loops=-1)
     new_last_player_move = "up"
     last_player_move = "up"
-    boss = GMS(len(grid) - 3, len(grid[0]) - 3, gms_image, CELL_SIZE, 999, player, grid)
+    boss = GMS(10, 10, gms_image, CELL_SIZE, 999, player, grid)
     boss.state = "pursuit"
 
     enemies.append(boss)
