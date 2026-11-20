@@ -9,18 +9,20 @@ class Sinner(Game_object):
         super().__init__(x, y, image, CELL_SIZE)
         self.hp = hp
         self.state = "patrol"
-        self.movement_rate = 5
+        self.movement_rate = 250
         self.global_target = target
 
         self.grid = grid
         self.current = self.grid[self.y][self.x]
-        self.move_cooldown = 150
+        self.move_cooldown = 250
         self.RANGE = 8
         self.visible_tiles = []
         self.last_move = 0
         self.last_search = 0
         self.search_cd = 3000
         self.current_path = []
+        self.debug_color = (255, 0, 0)
+        self.pursuit_speed = 150
 
         self.font = pygame.font.Font(None, 24)
 
@@ -169,16 +171,16 @@ class Sinner(Game_object):
             #print(f"current state: {self.state}")
             #print(f"target: {self.global_target}")
             if self.state == "pursuit":
-                self.move_cooldown = 150
+                self.move_cooldown = self.pursuit_speed
                 self.pursuit()
             elif self.state == "search":
                 if current_time - self.last_search >= self.search_cd:
                     self.last_search = 0
                     self.state = "patrol"
-                self.move_cooldown = 100
+                self.move_cooldown = self.movement_rate - 200
                 self.patrol()
             else:
-                self.move_cooldown = 250
+                self.move_cooldown = self.movement_rate
                 self.patrol()
 
     # take damage or die
@@ -186,7 +188,7 @@ class Sinner(Game_object):
         #print(f"current hp: {self.hp}")
         self.hp -= 1
         if self.hp <= 0:
-            self.global_target.score += 3
+            self.global_target.score += 7
             if self in enemies:
                 enemies.remove(self)
                 destructables.remove(self)
@@ -201,7 +203,7 @@ class Sinner(Game_object):
             center_y = y * self.CELL_SIZE + self.CELL_SIZE //2
 
             draw_pos = camera.apply(pygame.Vector2(center_x, center_y))
-            pygame.draw.circle(screen, (255, 0, 0), (draw_pos.x, draw_pos.y), 5)
+            pygame.draw.circle(screen, self.debug_color, (draw_pos.x, draw_pos.y), 5)
         
 
     # draws state for debug mode

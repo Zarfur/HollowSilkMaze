@@ -22,8 +22,8 @@ class Player(Game_object):
         self.m1_effect_radius = 0
         self.m1_range = m1rng
 
-        self.shaw = pygame.mixer.Sound("shaw.mp3")
-        self.gitgud = pygame.mixer.Sound("gitgud.mp3")
+        self.shaw = pygame.mixer.Sound("shaw.ogg")
+        self.gitgud = pygame.mixer.Sound("gitgud.ogg")
         self.channel = pygame.mixer.Channel(1)
         self.poop_channel = pygame.mixer.Channel(2)
 

@@ -8,7 +8,7 @@ class Display:
         self.player = player
         self.width = width
         self.height = height
-        self.data = ["score", "wah uwa wa uwa", "uwa wa taku taku", "cha o", "uwa", "wa wa wa uwa waai wo toreli", "uwa wa wa wai wai", "taichairo"]
+        self.data = []
         self.font = pygame.font.Font(None, 24)
 
 
@@ -23,4 +23,21 @@ class Display:
 
 
     def update(self):
-        self.data[0] = f"Player Candies: {self.player.score}"
+        gms = self.boss
+        plr = self.player
+
+        accuracy = 0
+        if gms.avg_accuracy[1] > 0:
+            accuracy = gms.avg_accuracy[0] / gms.avg_accuracy[1] * 100
+        
+        self.data = [
+            f"Player Candies: {plr.score}",
+            f"Player Position: ({plr.x}, {plr.y})",
+            f"Boss Position: ({gms.x}, {gms.y})",
+            f"Last Player Move: {gms.last_player_move}",
+            f"Predicted Position: {gms.predicted}",
+            f"Prediction Accuracy: {accuracy:.1f}%",
+            f"Boss State: {gms.state}",
+            f"Current Path Length: {len(gms.current_path)}",
+            f"Recency Bias: {gms.recency_bias}",
+        ]
